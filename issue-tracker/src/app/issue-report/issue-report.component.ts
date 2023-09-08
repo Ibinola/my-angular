@@ -1,7 +1,7 @@
-import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Output, EventEmitter, Input } from '@angular/core';
 import {FormBuilder, FormGroup, Validators} from '@angular/forms';
-import { Issue } from '../issue';
 import { IssuesService } from '../issues.service';
+import { Issue } from '../issue';
 
 @Component({
   selector: 'app-issue-report',
@@ -14,6 +14,8 @@ export class IssueReportComponent implements OnInit{
 
   issueForm: FormGroup | undefined;
 
+  suggestions: Issue[] = [];
+
   constructor(private builder: FormBuilder, private issueService: IssuesService) {}
 
   ngOnInit(): void {
@@ -23,10 +25,20 @@ export class IssueReportComponent implements OnInit{
         priority: ['', Validators.required],
         type: ['', Validators.required]
       });
+
+      this.issueForm.controls['title'].valueChanges.subscribe(
+        (title: string) => {
+          this.suggestions = this.issueService.getSuggestions(title);
+        });
   }
 
 
   addIssue(){
+    if(this.issueForm && this.issueForm.invalid){
+      this.issueForm.markAllAsTouched();
+      return;
+    }
+
     this.issueService.createIssue(this.issueForm?.value);
     this.formClose.emit();
   }
